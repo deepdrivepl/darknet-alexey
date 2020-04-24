@@ -866,11 +866,38 @@ extern "C" void save_cv_jpg(mat_cv *img_src, const char *name)
 extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int ext_output)
 {
     try {
+        char labelstr[4096] = { 0 };
+        sprintf(labelstr,"Input: %dx%d %s threshold=%.1f%% fps: %.1f (GTX 980M)",width_ext,height_ext,weights_ext, thresh*100,fps_display_ext);
+        // sprintf(labelstr,"EfficientNetB0-Yolov3 COCO enetb0-coco_final.weights threshold=%.1f%% fps: %.1f (GTX 980M)",thresh*100,fps_display_ext);
+
         cv::Mat *show_img = (cv::Mat*)mat;
         int i, j;
         if (!show_img) return;
         static int frame_id = 0;
         frame_id++;
+
+        float const font_size = show_img->rows / 1000.F;
+        cv::Size const text_size = cv::getTextSize(labelstr, cv::FONT_HERSHEY_COMPLEX_SMALL, font_size, 1, 0);
+        cv::Point pt1, pt2, pt_text, pt_text_bg1, pt_text_bg2;
+        pt1.x = 100;
+        pt1.y = 200;
+        pt2.x = 3500;
+        pt2.y = 100;
+        pt_text.x = 100;
+        pt_text.y = 100;
+        pt_text_bg1.x = 80;
+        pt_text_bg1.y = 100 - (3 + 18 * font_size);
+        pt_text_bg2.x = 3500;
+        pt_text_bg2.y = 120;
+        cv::Scalar color;
+        color.val[0] = 255;
+        color.val[1] = 255;
+        color.val[2] = 255;
+
+        cv::rectangle(*show_img, pt_text_bg1, pt_text_bg2, color, CV_FILLED, 8, 0);    // filled
+        cv::Scalar black_color = CV_RGB(0, 0, 0);
+        cv::putText(*show_img, labelstr, pt_text, cv::FONT_HERSHEY_COMPLEX_SMALL, font_size, black_color, 2 * font_size, CV_AA);
+
 
         for (i = 0; i < num; ++i) {
             char labelstr[4096] = { 0 };
@@ -894,7 +921,8 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 }
             }
             if (class_id >= 0) {
-                int width = std::max(1.0f, show_img->rows * .002f);
+                // int width = std::max(1.0f, show_img->rows * .002f);
+                int width = 1;
 
                 //if(0){
                 //width = pow(prob, 1./2.)*10+1;
@@ -940,7 +968,8 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 //int b_height = bot - top;
                 //sprintf(labelstr, "%d x %d - w: %d, h: %d", b_x_center, b_y_center, b_width, b_height);
 
-                float const font_size = show_img->rows / 1000.F;
+                // float const font_size = show_img->rows / 1500.F;
+                float const font_size = 0.5;
                 cv::Size const text_size = cv::getTextSize(labelstr, cv::FONT_HERSHEY_COMPLEX_SMALL, font_size, 1, 0);
                 cv::Point pt1, pt2, pt_text, pt_text_bg1, pt_text_bg2;
                 pt1.x = left;
@@ -976,15 +1005,15 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 //cvSaveImage(image_name, copy_img, 0);
                 //cvResetImageROI(copy_img);
 
-                cv::rectangle(*show_img, pt1, pt2, color, width, 8, 0);
+                cv::rectangle(*show_img, pt1, pt2, color, width, 4, 0);
                 if (ext_output)
                     printf("\t(left_x: %4.0f   top_y: %4.0f   width: %4.0f   height: %4.0f)\n",
                     (float)left, (float)top, b.w*show_img->cols, b.h*show_img->rows);
                 else
                     printf("\n");
 
-                cv::rectangle(*show_img, pt_text_bg1, pt_text_bg2, color, width, 8, 0);
-                cv::rectangle(*show_img, pt_text_bg1, pt_text_bg2, color, CV_FILLED, 8, 0);    // filled
+                cv::rectangle(*show_img, pt_text_bg1, pt_text_bg2, color, width, 4, 0);
+                cv::rectangle(*show_img, pt_text_bg1, pt_text_bg2, color, CV_FILLED, 4, 0);    // filled
                 cv::Scalar black_color = CV_RGB(0, 0, 0);
                 cv::putText(*show_img, labelstr, pt_text, cv::FONT_HERSHEY_COMPLEX_SMALL, font_size, black_color, 2 * font_size, CV_AA);
                 // cv::FONT_HERSHEY_COMPLEX_SMALL, cv::FONT_HERSHEY_SIMPLEX

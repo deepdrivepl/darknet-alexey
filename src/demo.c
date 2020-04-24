@@ -31,6 +31,11 @@ static network net;
 static image in_s ;
 static image det_s;
 
+/*extern*/ float fps_display_ext;
+/*extern*/ int width_ext=0;
+/*extern*/ int height_ext=0;
+/*extern*/ char* weights_ext=0;
+
 static cap_cv *cap;
 static float fps = 0;
 static float demo_thresh = 0;
@@ -105,6 +110,7 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
     int frame_skip, char *prefix, char *out_filename, int mjpeg_port, int json_port, int dont_show, int ext_output, int letter_box_in, int time_limit_sec, char *http_post_host,
     int benchmark, int benchmark_layers)
 {
+    weights_ext=weightfile;
     letter_box = letter_box_in;
     in_img = det_img = show_img = NULL;
     //skip = frame_skip;
@@ -118,6 +124,8 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
     demo_json_port = json_port;
     printf("Demo\n");
     net = parse_network_cfg_custom(cfgfile, 1, 1);    // set batch=1
+    width_ext=net.w;
+    height_ext=net.w;
     if(weightfile){
         load_weights(&net, weightfile);
     }
@@ -247,6 +255,8 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
 
             if (!benchmark) draw_detections_cv_v3(show_img, local_dets, local_nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, demo_ext_output);
             free_detections(local_dets, local_nboxes);
+
+            fps_display_ext = fps;
 
             printf("\nFPS:%.1f \t AVG_FPS:%.1f\n", fps, avg_fps);
 
